@@ -1,0 +1,6 @@
+[submodule "datasets/chowdown_recipes/chowdown"]
+	path = datasets/chowdown_recipes/chowdown
+	url = git@github.com:clarklab/chowdown.git
+[submodule "cycle-exp"]
+	path = cycle-exp
+	url = git@github.com:mjyc/cycle-exp.git
