@@ -1,15 +1,15 @@
 "use strict";
 
-var jsParser = require("./javascript-parser.js");
-var sexpParser = require("./s-expression-parser.js");
+const jsParser = require("./javascript-parser.js");
+const sexpParser = require("./s-expression-parser.js");
 
-var uopToSMT = {
+const uopToSMT = {
   "-": "-",
   "+": "+",
   "!": "not"
 };
 
-var bopToSMT = {
+const bopToSMT = {
   "===": "=",
   // '!==': undefined,
   "==": "=",
@@ -26,12 +26,12 @@ var bopToSMT = {
   // '%': 'mod',
 };
 
-var lopToSMT = {
+const lopToSMT = {
   "||": "or",
   "&&": "and"
 };
 
-var fncKeywords = {
+const fncKeywords = {
   check_sat: "check-sat",
   get_model: "get-model"
 };
@@ -100,8 +100,8 @@ function interpret(ast, typeLookup) {
       typeLookup
     )})`;
   } else if (ast.type === "FunctionDeclaration") {
-    var id = interpret(ast.id, typeLookup);
-    var tLookup = typeLookup[id];
+    const id = interpret(ast.id, typeLookup);
+    const tLookup = typeLookup[id];
     if (typeof tLookup === "undefined") {
       throw Error(
         `Type for function ${id} must be provided; typeLookup=${JSON.stringify(
@@ -109,8 +109,8 @@ function interpret(ast, typeLookup) {
         )}`
       );
     }
-    var params = ast.params.map(function(param) {
-      var p = interpret(param, typeLookup);
+    const params = ast.params.map(function(param) {
+      const p = interpret(param, typeLookup);
       if (typeof tLookup[p] === "undefined") {
         throw Error(
           `Type for function ${id}'s argument ${p} must be provided; typeLookup=${JSON.stringify(
@@ -120,7 +120,7 @@ function interpret(ast, typeLookup) {
       }
       return { type: tLookup[p], value: p };
     });
-    var tReturn = tLookup.return;
+    const tReturn = tLookup.return;
     if (typeof tReturn === "undefined") {
       throw Error(
         `Type for function "${id}"'s return value must be provided; typeLookup=${JSON.stringify(
@@ -134,8 +134,8 @@ function interpret(ast, typeLookup) {
       })
       .join(" ")}) ${tReturn} ${interpret(ast.body, typeLookup)})`;
   } else if (ast.type === "VariableDeclarator") {
-    var id = interpret(ast.id, typeLookup);
-    var tLookup = typeLookup[id];
+    const id = interpret(ast.id, typeLookup);
+    const tLookup = typeLookup[id];
     if (typeof tLookup === "undefined") {
       throw Error(
         `Type for variable ${id} must be provided; typeLookup=${JSON.stringify(
@@ -156,11 +156,11 @@ function interpret(ast, typeLookup) {
       })
       .join("\n");
   } else if (ast.type === "CallExpression") {
-    var callee = interpret(ast.callee, typeLookup);
+    let callee = interpret(ast.callee, typeLookup);
     callee = !!fncKeywords[callee] ? fncKeywords[callee] : callee;
     return `(${callee} ${ast.arguments
       .map(function(argument, i) {
-        var arg = interpret(argument, typeLookup);
+        const arg = interpret(argument, typeLookup);
         if (
           callee === "forall" &&
           i === 0 &&
@@ -187,12 +187,12 @@ function interpret(ast, typeLookup) {
 }
 
 function toSMT2(ast, typeLookup) {
-  var typeLookup = typeof typeLookup === "undefined" ? {} : typeLookup;
-  return interpret(ast, typeLookup);
+  const tLookup = typeof typeLookup === "undefined" ? {} : typeLookup;
+  return interpret(ast, tLookup);
 }
 
 function fromSMT2(tree) {
-  function interp(ast) {
+  const interp = ast => {
     if (ast.type === "Literal") {
       return ast.value;
     } else if (ast.type === "Identifier") {
@@ -200,7 +200,7 @@ function fromSMT2(tree) {
     } else if (ast.type === "Atom") {
       return interp(ast.value);
     } else if (ast.type === "Expression") {
-      var values = ast.value.map(interp);
+      const values = ast.value.map(interp);
       if (values[0] === "define-fun") {
         return { [values[1]]: values[4] };
       } else if (values[0] === "model") {
@@ -215,7 +215,7 @@ function fromSMT2(tree) {
         return null;
       }
     }
-  }
+  };
   return interp(tree);
 }
 
